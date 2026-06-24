@@ -1,0 +1,11 @@
+{
+  "name": "md-to-pdf",
+  "version": "1.0.0",
+  "description": "Convert Markdown with LaTeX math to PDF",
+  "scripts": {
+    "convert": "node print_pdf.js"
+  },
+  "dependencies": {
+    "puppeteer": "^24.0.0"
+  }
+}
