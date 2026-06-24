@@ -11,17 +11,17 @@ import subprocess
 import tempfile
 
 if len(sys.argv) < 2:
-    print("Usage: python3 md_to_pdf.py <input.md> [output.pdf]")
-    sys.exit(1)
+	print("Usage: python3 md_to_pdf.py <input.md> [output.pdf]")
+	sys.exit(1)
 
 INPUT = sys.argv[1]
 if len(sys.argv) >= 3:
-    OUTPUT_PDF = sys.argv[2]
+	OUTPUT_PDF = sys.argv[2]
 else:
-    OUTPUT_PDF = os.path.splitext(os.path.basename(INPUT))[0] + ".pdf"
+	OUTPUT_PDF = os.path.splitext(os.path.basename(INPUT))[0] + ".pdf"
 
 with open(INPUT, "r") as f:
-    md_text = f.read()
+	md_text = f.read()
 
 TITLE = os.path.splitext(os.path.basename(INPUT))[0].replace('_', ' ').title()
 
@@ -30,185 +30,185 @@ TITLE = os.path.splitext(os.path.basename(INPUT))[0].replace('_', ' ').title()
 # We'll convert markdown manually since we need fine control.
 
 def md_to_html(md):
-    """Simple markdown to HTML converter that preserves LaTeX math."""
-    lines = md.split('\n')
-    html_lines = []
-    in_list = False
-    in_sublist = False
-    i = 0
+	"""Simple markdown to HTML converter that preserves LaTeX math."""
+	lines = md.split('\n')
+	html_lines = []
+	in_list = False
+	in_sublist = False
+	i = 0
 
-    while i < len(lines):
-        line = lines[i]
+	while i < len(lines):
+		line = lines[i]
 
-        # Display math block
-        if line.strip().startswith('$$'):
-            if in_list:
-                if in_sublist:
-                    html_lines.append('</ul></li>')
-                    in_sublist = False
-                html_lines.append('</ul>')
-                in_list = False
-            # Collect all lines until closing $$
-            math_content = []
-            if line.strip() == '$$':
-                i += 1
-                while i < len(lines) and lines[i].strip() != '$$':
-                    math_content.append(lines[i])
-                    i += 1
-                i += 1  # skip closing $$
-            elif line.strip().endswith('$$') and line.strip() != '$$':
-                # Single-line: $$...$$
-                inner = line.strip()[2:-2]
-                math_content.append(inner)
-                i += 1
-            else:
-                # Opens with $$ but doesn't close on same line
-                rest = line.strip()[2:]
-                if rest:
-                    math_content.append(rest)
-                i += 1
-                while i < len(lines) and not lines[i].strip().endswith('$$'):
-                    math_content.append(lines[i])
-                    i += 1
-                if i < len(lines):
-                    last = lines[i].strip()
-                    if last != '$$':
-                        math_content.append(last[:-2])
-                    i += 1
+		# Display math block
+		if line.strip().startswith('$$'):
+			if in_list:
+				if in_sublist:
+					html_lines.append('</ul></li>')
+					in_sublist = False
+				html_lines.append('</ul>')
+				in_list = False
+			# Collect all lines until closing $$
+			math_content = []
+			if line.strip() == '$$':
+				i += 1
+				while i < len(lines) and lines[i].strip() != '$$':
+					math_content.append(lines[i])
+					i += 1
+				i += 1  # skip closing $$
+			elif line.strip().endswith('$$') and line.strip() != '$$':
+				# Single-line: $$...$$
+				inner = line.strip()[2:-2]
+				math_content.append(inner)
+				i += 1
+			else:
+				# Opens with $$ but doesn't close on same line
+				rest = line.strip()[2:]
+				if rest:
+					math_content.append(rest)
+				i += 1
+				while i < len(lines) and not lines[i].strip().endswith('$$'):
+					math_content.append(lines[i])
+					i += 1
+				if i < len(lines):
+					last = lines[i].strip()
+					if last != '$$':
+						math_content.append(last[:-2])
+					i += 1
 
-            latex = '\n'.join(math_content).strip()
-            html_lines.append(f'<div class="math-display">$${latex}$$</div>')
-            continue
+			latex = '\n'.join(math_content).strip()
+			html_lines.append(f'<div class="math-display">$${latex}$$</div>')
+			continue
 
-        # Headers
-        if line.startswith('###'):
-            if in_list:
-                if in_sublist:
-                    html_lines.append('</ul></li>')
-                    in_sublist = False
-                html_lines.append('</ul>')
-                in_list = False
-            html_lines.append(f'<h3>{process_inline(line.lstrip("#").strip())}</h3>')
-            i += 1
-            continue
-        if line.startswith('##'):
-            if in_list:
-                if in_sublist:
-                    html_lines.append('</ul></li>')
-                    in_sublist = False
-                html_lines.append('</ul>')
-                in_list = False
-            html_lines.append(f'<h2>{process_inline(line.lstrip("#").strip())}</h2>')
-            i += 1
-            continue
-        if line.startswith('#'):
-            if in_list:
-                if in_sublist:
-                    html_lines.append('</ul></li>')
-                    in_sublist = False
-                html_lines.append('</ul>')
-                in_list = False
-            html_lines.append(f'<h1>{process_inline(line.lstrip("#").strip())}</h1>')
-            i += 1
-            continue
+		# Headers
+		if line.startswith('###'):
+			if in_list:
+				if in_sublist:
+					html_lines.append('</ul></li>')
+					in_sublist = False
+				html_lines.append('</ul>')
+				in_list = False
+			html_lines.append(f'<h3>{process_inline(line.lstrip("#").strip())}</h3>')
+			i += 1
+			continue
+		if line.startswith('##'):
+			if in_list:
+				if in_sublist:
+					html_lines.append('</ul></li>')
+					in_sublist = False
+				html_lines.append('</ul>')
+				in_list = False
+			html_lines.append(f'<h2>{process_inline(line.lstrip("#").strip())}</h2>')
+			i += 1
+			continue
+		if line.startswith('#'):
+			if in_list:
+				if in_sublist:
+					html_lines.append('</ul></li>')
+					in_sublist = False
+				html_lines.append('</ul>')
+				in_list = False
+			html_lines.append(f'<h1>{process_inline(line.lstrip("#").strip())}</h1>')
+			i += 1
+			continue
 
-        # List items (detect indent level)
-        list_match = re.match(r'^(\t+|- |\s{2,})(- )?(.*)', line)
-        if line.strip().startswith('- '):
-            # Determine indent level
-            stripped = line.rstrip()
-            leading_ws = len(stripped) - len(stripped.lstrip())
-            is_sub = leading_ws >= 2 or stripped.startswith('\t-') or stripped.startswith('\t\t-')
-            text = line.strip().lstrip('- ').strip()
+		# List items (detect indent level)
+		list_match = re.match(r'^(\t+|- |\s{2,})(- )?(.*)', line)
+		if line.strip().startswith('- '):
+			# Determine indent level
+			stripped = line.rstrip()
+			leading_ws = len(stripped) - len(stripped.lstrip())
+			is_sub = leading_ws >= 2 or stripped.startswith('\t-') or stripped.startswith('\t\t-')
+			text = line.strip().lstrip('- ').strip()
 
-            if is_sub:
-                if not in_list:
-                    html_lines.append('<ul>')
-                    in_list = True
-                if not in_sublist:
-                    html_lines.append('<li><ul>')
-                    in_sublist = True
-                html_lines.append(f'<li>{process_inline(text)}</li>')
-            else:
-                if in_sublist:
-                    html_lines.append('</ul></li>')
-                    in_sublist = False
-                if not in_list:
-                    html_lines.append('<ul>')
-                    in_list = True
-                html_lines.append(f'<li>{process_inline(text)}</li>')
-            i += 1
-            continue
+			if is_sub:
+				if not in_list:
+					html_lines.append('<ul>')
+					in_list = True
+				if not in_sublist:
+					html_lines.append('<li><ul>')
+					in_sublist = True
+				html_lines.append(f'<li>{process_inline(text)}</li>')
+			else:
+				if in_sublist:
+					html_lines.append('</ul></li>')
+					in_sublist = False
+				if not in_list:
+					html_lines.append('<ul>')
+					in_list = True
+				html_lines.append(f'<li>{process_inline(text)}</li>')
+			i += 1
+			continue
 
-        # Close any open list
-        if in_list and line.strip() == '':
-            if in_sublist:
-                html_lines.append('</ul></li>')
-                in_sublist = False
-            html_lines.append('</ul>')
-            in_list = False
-            i += 1
-            continue
+		# Close any open list
+		if in_list and line.strip() == '':
+			if in_sublist:
+				html_lines.append('</ul></li>')
+				in_sublist = False
+			html_lines.append('</ul>')
+			in_list = False
+			i += 1
+			continue
 
-        # Empty line
-        if line.strip() == '':
-            i += 1
-            continue
+		# Empty line
+		if line.strip() == '':
+			i += 1
+			continue
 
-        # Regular paragraph — collect contiguous lines
-        para_lines = [line]
-        i += 1
-        while i < len(lines):
-            next_line = lines[i]
-            if (next_line.strip() == '' or
-                next_line.startswith('#') or
-                next_line.strip().startswith('- ') or
-                next_line.strip().startswith('$$')):
-                break
-            para_lines.append(next_line)
-            i += 1
+		# Regular paragraph — collect contiguous lines
+		para_lines = [line]
+		i += 1
+		while i < len(lines):
+			next_line = lines[i]
+			if (next_line.strip() == '' or
+				next_line.startswith('#') or
+				next_line.strip().startswith('- ') or
+				next_line.strip().startswith('$$')):
+				break
+			para_lines.append(next_line)
+			i += 1
 
-        if in_list:
-            if in_sublist:
-                html_lines.append('</ul></li>')
-                in_sublist = False
-            html_lines.append('</ul>')
-            in_list = False
+		if in_list:
+			if in_sublist:
+				html_lines.append('</ul></li>')
+				in_sublist = False
+			html_lines.append('</ul>')
+			in_list = False
 
-        paragraph = ' '.join(l.strip() for l in para_lines)
-        html_lines.append(f'<p>{process_inline(paragraph)}</p>')
+		paragraph = ' '.join(l.strip() for l in para_lines)
+		html_lines.append(f'<p>{process_inline(paragraph)}</p>')
 
-    # Close any remaining open list
-    if in_sublist:
-        html_lines.append('</ul></li>')
-    if in_list:
-        html_lines.append('</ul>')
+	# Close any remaining open list
+	if in_sublist:
+		html_lines.append('</ul></li>')
+	if in_list:
+		html_lines.append('</ul>')
 
-    return '\n'.join(html_lines)
+	return '\n'.join(html_lines)
 
 
 def process_inline(text):
-    """Process inline markdown: bold, italic, code, inline math."""
-    # Protect inline math first — replace with placeholders
-    math_parts = []
-    def save_math(m):
-        math_parts.append(m.group(0))
-        return f'%%MATH{len(math_parts)-1}%%'
+	"""Process inline markdown: bold, italic, code, inline math."""
+	# Protect inline math first — replace with placeholders
+	math_parts = []
+	def save_math(m):
+		math_parts.append(m.group(0))
+		return f'%%MATH{len(math_parts)-1}%%'
 
-    text = re.sub(r'(?<!\$)\$(?!\$)(.+?)\$(?!\$)', save_math, text)
+	text = re.sub(r'(?<!\$)\$(?!\$)(.+?)\$(?!\$)', save_math, text)
 
-    # Code
-    text = re.sub(r'`(.+?)`', r'<code>\1</code>', text)
-    # Bold
-    text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
-    # Italic
-    text = re.sub(r'\*(.+?)\*', r'<em>\1</em>', text)
+	# Code
+	text = re.sub(r'`(.+?)`', r'<code>\1</code>', text)
+	# Bold
+	text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
+	# Italic
+	text = re.sub(r'\*(.+?)\*', r'<em>\1</em>', text)
 
-    # Restore math
-    for i, m in enumerate(math_parts):
-        text = text.replace(f'%%MATH{i}%%', f'<span class="math-inline">{m}</span>')
+	# Restore math
+	for i, m in enumerate(math_parts):
+		text = text.replace(f'%%MATH{i}%%', f'<span class="math-inline">{m}</span>')
 
-    return text
+	return text
 
 
 body_html = md_to_html(md_text)
@@ -348,26 +348,26 @@ full_html = f"""<!DOCTYPE html>
 
 # Write HTML to a temporary file
 with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
-    f.write(full_html)
-    temp_html_path = f.name
+	f.write(full_html)
+	temp_html_path = f.name
 
 try:
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    print_pdf_js = os.path.join(script_dir, "print_pdf.js")
+	script_dir = os.path.dirname(os.path.abspath(__file__))
+	print_pdf_js = os.path.join(script_dir, "print_pdf.js")
 
-    # Run the puppeteer print script
-    result = subprocess.run(
-        ["node", print_pdf_js, temp_html_path, OUTPUT_PDF],
-        capture_output=True,
-        text=True,
-        check=True
-    )
-    if result.stdout:
-        print(result.stdout.strip())
+	# Run the puppeteer print script
+	result = subprocess.run(
+		["node", print_pdf_js, temp_html_path, OUTPUT_PDF],
+		capture_output=True,
+		text=True,
+		check=True
+	)
+	if result.stdout:
+		print(result.stdout.strip())
 except subprocess.CalledProcessError as e:
-    print("Error printing PDF via Puppeteer:", file=sys.stderr)
-    print(e.stderr, file=sys.stderr)
-    sys.exit(e.returncode)
+	print("Error printing PDF via Puppeteer:", file=sys.stderr)
+	print(e.stderr, file=sys.stderr)
+	sys.exit(e.returncode)
 finally:
-    if os.path.exists(temp_html_path):
-        os.remove(temp_html_path)
+	if os.path.exists(temp_html_path):
+		os.remove(temp_html_path)
