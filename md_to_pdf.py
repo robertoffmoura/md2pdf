@@ -1,23 +1,24 @@
 """
-Convert a Markdown file with LaTeX math to a polished HTML file with
-KaTeX-rendered math. A companion Puppeteer script (print_pdf.js) then
-prints the HTML to PDF.
+Convert a Markdown file with LaTeX math to a polished PDF file using KaTeX
+for math rendering and Puppeteer (headless Chrome) for printing.
 
-Usage: python md_to_pdf.py <input.md> [output.html]
+Usage: python3 md_to_pdf.py <input.md> [output.pdf]
 """
 import re
 import sys
 import os
+import subprocess
+import tempfile
 
 if len(sys.argv) < 2:
-    print("Usage: python md_to_pdf.py <input.md> [output.html]")
+    print("Usage: python3 md_to_pdf.py <input.md> [output.pdf]")
     sys.exit(1)
 
 INPUT = sys.argv[1]
 if len(sys.argv) >= 3:
-    OUTPUT_HTML = sys.argv[2]
+    OUTPUT_PDF = sys.argv[2]
 else:
-    OUTPUT_HTML = os.path.splitext(os.path.basename(INPUT))[0] + ".html"
+    OUTPUT_PDF = os.path.splitext(os.path.basename(INPUT))[0] + ".pdf"
 
 with open(INPUT, "r") as f:
     md_text = f.read()
@@ -345,6 +346,28 @@ full_html = f"""<!DOCTYPE html>
 </html>
 """
 
-with open(OUTPUT_HTML, 'w') as f:
+# Write HTML to a temporary file
+with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
     f.write(full_html)
-print(f"HTML written to {OUTPUT_HTML}")
+    temp_html_path = f.name
+
+try:
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    print_pdf_js = os.path.join(script_dir, "print_pdf.js")
+
+    # Run the puppeteer print script
+    result = subprocess.run(
+        ["node", print_pdf_js, temp_html_path, OUTPUT_PDF],
+        capture_output=True,
+        text=True,
+        check=True
+    )
+    if result.stdout:
+        print(result.stdout.strip())
+except subprocess.CalledProcessError as e:
+    print("Error printing PDF via Puppeteer:", file=sys.stderr)
+    print(e.stderr, file=sys.stderr)
+    sys.exit(e.returncode)
+finally:
+    if os.path.exists(temp_html_path):
+        os.remove(temp_html_path)

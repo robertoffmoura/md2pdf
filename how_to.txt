@@ -4,12 +4,12 @@ First-time setup:
 
 To convert a markdown file to PDF:
 
-    python3 md_to_pdf.py <input.md>
-    node print_pdf.js <input.html>
+    python3 md_to_pdf.py <input.md> [output.pdf]
 
-Output filenames are derived automatically (.md → .html → .pdf).
-You can also specify them explicitly:
+Example:
 
-    python3 md_to_pdf.py <input.md> <output.html>
-    node print_pdf.js <input.html> <output.pdf>
+    python3 md_to_pdf.py input.md
+
+This will compile input.md directly to input.pdf in your current directory, using a temporary HTML file internally and cleaning it up automatically.
+
 
