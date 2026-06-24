@@ -1,14 +1,17 @@
 """
 Convert a Markdown file with LaTeX math to a polished PDF file using KaTeX
-for math rendering and Puppeteer (headless Chrome) for printing.
+for math rendering and Selenium (headless Chrome) for printing.
 
 Usage: python3 md_to_pdf.py <input.md> [output.pdf]
 """
 import re
 import sys
 import os
-import subprocess
 import tempfile
+import base64
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
 
 if len(sys.argv) < 2:
 	print("Usage: python3 md_to_pdf.py <input.md> [output.pdf]")
@@ -351,22 +354,55 @@ with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encodin
 	temp_html_path = f.name
 
 try:
-	script_dir = os.path.dirname(os.path.abspath(__file__))
-	print_pdf_js = os.path.join(script_dir, "print_pdf.js")
+	options = Options()
+	options.add_argument('--headless')
+	options.add_argument('--no-sandbox')
+	options.add_argument('--disable-dev-shm-usage')
 
-	# Run the puppeteer print script
-	result = subprocess.run(
-		["node", print_pdf_js, temp_html_path, OUTPUT_PDF],
-		capture_output=True,
-		text=True,
-		check=True
-	)
-	if result.stdout:
-		print(result.stdout.strip())
-except subprocess.CalledProcessError as e:
-	print("Error printing PDF via Puppeteer:", file=sys.stderr)
-	print(e.stderr, file=sys.stderr)
-	sys.exit(e.returncode)
+	# Point to playwright-installed chromium in test sandbox
+	sandbox_chrome = "/home/agent/.cache/ms-playwright/chromium-1223/chrome-linux64/chrome"
+	if os.path.exists(sandbox_chrome):
+		options.binary_location = sandbox_chrome
+
+	# Create driver (Selenium Manager handles chromedriver automatically)
+	driver = webdriver.Chrome(options=options)
+
+	try:
+		# Load the HTML file
+		driver.get(f"file://{os.path.abspath(temp_html_path)}")
+
+		# Wait for KaTeX to finish rendering
+		WebDriverWait(driver, 10).until(
+			lambda d: d.execute_script("""
+				const mathElements = document.querySelectorAll('.math-display, .math-inline');
+				if (mathElements.length === 0) return true;
+				return document.querySelectorAll('.katex').length > 0;
+			""")
+		)
+
+		# Print to PDF using CDP
+		print_settings = {
+			"printBackground": True,
+			"paperWidth": 8.27,    # A4 width in inches
+			"paperHeight": 11.69,  # A4 height in inches
+			"marginTop": 0.5,      # 48px margin in inches (48 / 96 = 0.5)
+			"marginBottom": 0.5,
+			"marginLeft": 0.5,
+			"marginRight": 0.5
+		}
+
+		result = driver.execute_cdp_cmd("Page.printToPDF", print_settings)
+		pdf_data = base64.b64decode(result['data'])
+
+		with open(OUTPUT_PDF, "wb") as pdf_file:
+			pdf_file.write(pdf_data)
+
+		print(f"PDF written to {os.path.abspath(OUTPUT_PDF)}")
+	finally:
+		driver.quit()
+except Exception as e:
+	print(f"Error printing PDF via Selenium: {e}", file=sys.stderr)
+	sys.exit(1)
 finally:
 	if os.path.exists(temp_html_path):
 		os.remove(temp_html_path)

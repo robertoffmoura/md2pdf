@@ -1,6 +1,6 @@
 First-time setup:
 
-    cd md_to_pdf && npm install
+    pip install selenium
 
 To convert a markdown file to PDF:
 
