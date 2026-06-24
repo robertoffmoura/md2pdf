@@ -1,14 +1,28 @@
 """
-Convert pipeline_overview.md to a polished HTML file with KaTeX-rendered math.
-A separate Puppeteer script then prints this HTML to PDF.
+Convert a Markdown file with LaTeX math to a polished HTML file with
+KaTeX-rendered math. A companion Puppeteer script (print_pdf.js) then
+prints the HTML to PDF.
+
+Usage: python md_to_pdf.py <input.md> [output.html]
 """
 import re
+import sys
+import os
 
-INPUT = "pipeline_overview.md"
-OUTPUT_HTML = "pipeline_overview.html"
+if len(sys.argv) < 2:
+    print("Usage: python md_to_pdf.py <input.md> [output.html]")
+    sys.exit(1)
+
+INPUT = sys.argv[1]
+if len(sys.argv) >= 3:
+    OUTPUT_HTML = sys.argv[2]
+else:
+    OUTPUT_HTML = os.path.splitext(os.path.basename(INPUT))[0] + ".html"
 
 with open(INPUT, "r") as f:
     md_text = f.read()
+
+TITLE = os.path.splitext(os.path.basename(INPUT))[0].replace('_', ' ').title()
 
 # --- Step 1: Protect math blocks from markdown processing ---
 # Extract display math $$ ... $$ and inline math $ ... $
@@ -202,7 +216,7 @@ full_html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Pipeline Overview</title>
+<title>{TITLE}</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"

@@ -1,3 +1,15 @@
-To regenerate, just run:
+First-time setup:
 
-    python3 md_to_pdf.py && node print_pdf.js
+    cd md_to_pdf && npm install
+
+To convert a markdown file to PDF:
+
+    python3 md_to_pdf.py <input.md>
+    node print_pdf.js <input.html>
+
+Output filenames are derived automatically (.md → .html → .pdf).
+You can also specify them explicitly:
+
+    python3 md_to_pdf.py <input.md> <output.html>
+    node print_pdf.js <input.html> <output.pdf>
+
