@@ -1,0 +1,3 @@
+To regenerate, just run:
+
+    python3 md_to_pdf.py && node print_pdf.js
