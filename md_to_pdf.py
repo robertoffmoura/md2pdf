@@ -113,7 +113,6 @@ def md_to_html(md):
 			continue
 
 		# List items (detect indent level)
-		list_match = re.match(r'^(\t+|- |\s{2,})(- )?(.*)', line)
 		if line.strip().startswith('- '):
 			# Determine indent level
 			stripped = line.rstrip()
