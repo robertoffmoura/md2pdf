@@ -2,7 +2,7 @@
 Convert a Markdown file with LaTeX math to a polished PDF file using KaTeX
 for math rendering and Selenium (headless Chrome) for printing.
 
-Usage: python3 md_to_pdf.py <input.md> [output.pdf]
+Usage: python3 md2pdf.py <input.md> [output.pdf]
 """
 import re
 import sys
@@ -14,7 +14,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 
 if len(sys.argv) < 2:
-	print("Usage: python3 md_to_pdf.py <input.md> [output.pdf]")
+	print("Usage: python3 md2pdf.py <input.md> [output.pdf]")
 	sys.exit(1)
 
 INPUT = sys.argv[1]
