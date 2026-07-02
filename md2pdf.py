@@ -71,6 +71,18 @@ def md_to_html(md):
 			html_lines.append(f'<div class="math-display">$${latex}$$</div>')
 			continue
 
+		# Horizontal Rule
+		if line.strip() == '---':
+			if in_list:
+				if in_sublist:
+					html_lines.append('</ul></li>')
+					in_sublist = False
+				html_lines.append('</ul>')
+				in_list = False
+			html_lines.append('<hr>')
+			i += 1
+			continue
+
 		# Headers
 		if line.startswith('###'):
 			if in_list:
@@ -314,6 +326,13 @@ def main():
     margin: 10px 0;
     text-align: justify;
     hyphens: auto;
+  }}
+
+  hr {{
+    border: 0;
+    height: 1px;
+    background: var(--border);
+    margin: 32px 0;
   }}
 
   ul {{
