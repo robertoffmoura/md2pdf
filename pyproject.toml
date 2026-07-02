@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "md2pdf-tex"
+version = "0.1.0"
+authors = [
+	{ name = "Roberto Moura" },
+]
+description = "Convert Markdown with LaTeX math to PDF using KaTeX and headless Chrome"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+	"Programming Language :: Python :: 3",
+	"License :: OSI Approved :: MIT License",
+	"Operating System :: OS Independent",
+]
+dependencies = [
+	"selenium",
+]
+
+[project.urls]
+Homepage = "https://github.com/robertoffmoura/md2pdf"
+
+[project.scripts]
+md2pdf = "md2pdf:main"
