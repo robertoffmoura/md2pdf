@@ -13,20 +13,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 
-if len(sys.argv) < 2:
-	print("Usage: python3 md2pdf.py <input.md> [output.pdf]")
-	sys.exit(1)
+# Execution logic is wrapped in main() at the bottom
 
-INPUT = sys.argv[1]
-if len(sys.argv) >= 3:
-	OUTPUT_PDF = sys.argv[2]
-else:
-	OUTPUT_PDF = os.path.splitext(os.path.basename(INPUT))[0] + ".pdf"
-
-with open(INPUT, "r") as f:
-	md_text = f.read()
-
-TITLE = os.path.splitext(os.path.basename(INPUT))[0].replace('_', ' ').title()
 
 # --- Step 1: Protect math blocks from markdown processing ---
 # Extract display math $$ ... $$ and inline math $ ... $
@@ -213,9 +201,25 @@ def process_inline(text):
 	return text
 
 
-body_html = md_to_html(md_text)
+def main():
+	if len(sys.argv) < 2:
+		print("Usage: md2pdf <input.md> [output.pdf]")
+		sys.exit(1)
 
-full_html = f"""<!DOCTYPE html>
+	INPUT = sys.argv[1]
+	if len(sys.argv) >= 3:
+		OUTPUT_PDF = sys.argv[2]
+	else:
+		OUTPUT_PDF = os.path.splitext(os.path.basename(INPUT))[0] + ".pdf"
+
+	with open(INPUT, "r") as f:
+		md_text = f.read()
+
+	TITLE = os.path.splitext(os.path.basename(INPUT))[0].replace('_', ' ').title()
+
+	body_html = md_to_html(md_text)
+
+	full_html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -348,61 +352,65 @@ full_html = f"""<!DOCTYPE html>
 </html>
 """
 
-# Write HTML to a temporary file
-with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
-	f.write(full_html)
-	temp_html_path = f.name
-
-try:
-	options = Options()
-	options.add_argument('--headless')
-	options.add_argument('--no-sandbox')
-	options.add_argument('--disable-dev-shm-usage')
-
-	# Point to playwright-installed chromium in test sandbox
-	sandbox_chrome = "/home/agent/.cache/ms-playwright/chromium-1223/chrome-linux64/chrome"
-	if os.path.exists(sandbox_chrome):
-		options.binary_location = sandbox_chrome
-
-	# Create driver (Selenium Manager handles chromedriver automatically)
-	driver = webdriver.Chrome(options=options)
+	# Write HTML to a temporary file
+	with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
+		f.write(full_html)
+		temp_html_path = f.name
 
 	try:
-		# Load the HTML file
-		driver.get(f"file://{os.path.abspath(temp_html_path)}")
+		options = Options()
+		options.add_argument('--headless')
+		options.add_argument('--no-sandbox')
+		options.add_argument('--disable-dev-shm-usage')
 
-		# Wait for KaTeX to finish rendering
-		WebDriverWait(driver, 10).until(
-			lambda d: d.execute_script("""
-				const mathElements = document.querySelectorAll('.math-display, .math-inline');
-				if (mathElements.length === 0) return true;
-				return document.querySelectorAll('.katex').length > 0;
-			""")
-		)
+		# Point to playwright-installed chromium in test sandbox
+		sandbox_chrome = "/home/agent/.cache/ms-playwright/chromium-1223/chrome-linux64/chrome"
+		if os.path.exists(sandbox_chrome):
+			options.binary_location = sandbox_chrome
 
-		# Print to PDF using CDP
-		print_settings = {
-			"printBackground": True,
-			"paperWidth": 8.27,    # A4 width in inches
-			"paperHeight": 11.69,  # A4 height in inches
-			"marginTop": 0.5,      # 48px margin in inches (48 / 96 = 0.5)
-			"marginBottom": 0.5,
-			"marginLeft": 0.5,
-			"marginRight": 0.5
-		}
+		# Create driver (Selenium Manager handles chromedriver automatically)
+		driver = webdriver.Chrome(options=options)
 
-		result = driver.execute_cdp_cmd("Page.printToPDF", print_settings)
-		pdf_data = base64.b64decode(result['data'])
+		try:
+			# Load the HTML file
+			driver.get(f"file://{os.path.abspath(temp_html_path)}")
 
-		with open(OUTPUT_PDF, "wb") as pdf_file:
-			pdf_file.write(pdf_data)
+			# Wait for KaTeX to finish rendering
+			WebDriverWait(driver, 10).until(
+				lambda d: d.execute_script("""
+					const mathElements = document.querySelectorAll('.math-display, .math-inline');
+					if (mathElements.length === 0) return true;
+					return document.querySelectorAll('.katex').length > 0;
+				""")
+			)
 
-		print(f"PDF written to {os.path.abspath(OUTPUT_PDF)}")
+			# Print to PDF using CDP
+			print_settings = {
+				"printBackground": True,
+				"paperWidth": 8.27,    # A4 width in inches
+				"paperHeight": 11.69,  # A4 height in inches
+				"marginTop": 0.5,      # 48px margin in inches (48 / 96 = 0.5)
+				"marginBottom": 0.5,
+				"marginLeft": 0.5,
+				"marginRight": 0.5
+			}
+
+			result = driver.execute_cdp_cmd("Page.printToPDF", print_settings)
+			pdf_data = base64.b64decode(result['data'])
+
+			with open(OUTPUT_PDF, "wb") as pdf_file:
+				pdf_file.write(pdf_data)
+
+			print(f"PDF written to {os.path.abspath(OUTPUT_PDF)}")
+		finally:
+			driver.quit()
+	except Exception as e:
+		print(f"Error printing PDF via Selenium: {e}", file=sys.stderr)
+		sys.exit(1)
 	finally:
-		driver.quit()
-except Exception as e:
-	print(f"Error printing PDF via Selenium: {e}", file=sys.stderr)
-	sys.exit(1)
-finally:
-	if os.path.exists(temp_html_path):
-		os.remove(temp_html_path)
+		if os.path.exists(temp_html_path):
+			os.remove(temp_html_path)
+
+
+if __name__ == '__main__':
+	main()
