@@ -2,12 +2,18 @@
 
 A minimalist, high-fidelity Markdown-to-PDF converter written in Python. It parses Markdown files containing LaTeX mathematical formulas, renders them using KaTeX, and outputs a print-perfect PDF using a headless Chrome instance via Selenium.
 
+<p align="center">
+  <img src="sample_output.png" alt="Sample PDF output from md2pdf" width="600">
+</p>
+
+> *Generated from [sample.md](sample.md) — try it yourself!*
+
 ## Features
 
 - **High-Fidelity PDF Output**: Employs headless Google Chrome to print the rendered HTML layout to PDF, preserving pagination, fonts, margins, and alignments.
 - **LaTeX Math Support**: Seamlessly renders inline math (`$...$`) and block math (`$$...$$`) via **KaTeX**.
 - **Minimal Dependencies**: Requires only Python, Chrome/Chromium, and the Python `selenium` library.
-- **Polished Typography**: Features premium, print-optimized font pairings (Source Serif 4, Source Sans 3, and Source Code Pro) loaded dynamically from Google Fonts.
+- **Clean Typography**: Uses the system sans-serif font stack for a clean, familiar look, with Source Code Pro for inline code.
 - **Clean Markdown Parser**: A custom regex-based parser that translates standard Markdown elements into clean HTML while protecting LaTeX delimiters from markdown interference.
 
 ---
