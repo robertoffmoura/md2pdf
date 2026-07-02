@@ -1,3 +1,18 @@
 *.html
 *.pdf
+*.txt
+*.md
 .DS_Store
+
+# Python build artifacts
+dist/
+build/
+*.egg-info/
+__pycache__/
+
+# Virtual environments
+venv/
+.venv/
+
+# IDE and agent settings
+.antigravitycli/
