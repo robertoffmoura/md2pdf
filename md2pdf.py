@@ -272,7 +272,7 @@ def main():
     throwOnError: false
   }});"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&family=Source+Sans+3:wght@400;600;700&family=Source+Code+Pro:wght@400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400&display=swap');
 
   :root {{
     --text: #1a1a2e;
@@ -285,7 +285,7 @@ def main():
   * {{ margin: 0; padding: 0; box-sizing: border-box; }}
 
   body {{
-    font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
     font-size: 11pt;
     line-height: 1.7;
     color: var(--text);
@@ -295,7 +295,7 @@ def main():
   }}
 
   h1 {{
-    font-family: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
     font-size: 24pt;
     font-weight: 700;
     line-height: 1.25;
@@ -307,7 +307,7 @@ def main():
   }}
 
   h2 {{
-    font-family: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
     font-size: 17pt;
     font-weight: 700;
     line-height: 1.25;
@@ -319,7 +319,7 @@ def main():
   }}
 
   h3 {{
-    font-family: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
     font-size: 13pt;
     font-weight: 600;
     margin: 24px 0 6px 0;
