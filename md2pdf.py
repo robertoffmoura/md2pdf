@@ -340,7 +340,8 @@ def main():
   }}
 
   ul {{
-    margin: 8px 0;
+    margin: 4px 0;
+    margin-left: 16px;
     padding-left: 24px;
   }}
 
@@ -348,8 +349,14 @@ def main():
     margin-bottom: 5px;
   }}
 
+  li:has(> ul) {{
+    list-style-type: none;
+  }}
+
   li > ul {{
     margin-top: 4px;
+    margin-left: 16px;
+    padding-left: 24px;
   }}
 
   strong {{
