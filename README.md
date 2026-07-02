@@ -18,16 +18,17 @@ A minimalist, high-fidelity Markdown-to-PDF converter written in Python. It pars
 - **Python 3.x**
 - **Google Chrome** or **Chromium** browser installed on your system.
 
-### 2. Install Python Package
-Install the Python dependencies via `pip`. It is recommended to use a virtual environment:
+### 2. Install Package
+You can install the package directly from PyPI:
 
 ```bash
-# Create and activate a virtual environment (optional)
-python3 -m venv venv
-source venv/bin/activate
+pip install md2pdf-tex
+```
 
-# Install Selenium
-pip install selenium
+Or install it globally as a standalone command-line tool using `pipx` (recommended):
+
+```bash
+pipx install md2pdf-tex
 ```
 
 *Note: Selenium Manager will automatically locate and download the appropriate driver (`chromedriver`) for your Chrome version. No manual driver setup is needed.*
@@ -39,7 +40,7 @@ pip install selenium
 Run the converter from your terminal:
 
 ```bash
-python3 md2pdf.py <input.md> [output.pdf]
+md2pdf <input.md> [output.pdf]
 ```
 
 - **`<input.md>`**: The path to your input Markdown file.
@@ -64,7 +65,7 @@ Where:
 Convert it using:
 
 ```bash
-python3 md2pdf.py document.md
+md2pdf document.md
 ```
 
 This generates `document.pdf` with properly formatted headers, bulleted lists, and beautiful, high-resolution mathematical equations.
