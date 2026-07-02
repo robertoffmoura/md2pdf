@@ -298,7 +298,10 @@ def main():
     font-family: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
     font-size: 24pt;
     font-weight: 700;
-    margin: 36px 0 12px 0;
+    line-height: 1.25;
+    margin: 36px 0 16px 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
     color: var(--text);
     letter-spacing: -0.02em;
   }}
@@ -307,9 +310,10 @@ def main():
     font-family: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
     font-size: 17pt;
     font-weight: 700;
-    margin: 32px 0 8px 0;
-    padding-bottom: 6px;
-    border-bottom: 2px solid var(--border);
+    line-height: 1.25;
+    margin: 32px 0 16px 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
     color: var(--text);
     letter-spacing: -0.01em;
   }}
@@ -332,7 +336,7 @@ def main():
     border: 0;
     height: 1px;
     background: var(--border);
-    margin: 32px 0;
+    margin: 12px 0 20px 0;
   }}
 
   ul {{
