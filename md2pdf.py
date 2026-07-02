@@ -178,7 +178,7 @@ def md_to_html(md):
 
 
 def process_inline(text):
-	"""Process inline markdown: bold, italic, code, inline math."""
+	"""Process inline markdown: bold, italic, code, links, images, inline math."""
 	# Protect inline math first — replace with placeholders
 	math_parts = []
 	def save_math(m):
@@ -187,6 +187,10 @@ def process_inline(text):
 
 	text = re.sub(r'(?<!\$)\$(?!\$)(.+?)\$(?!\$)', save_math, text)
 
+	# Images: ![alt](url)
+	text = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', r'<img src="\2" alt="\1" />', text)
+	# Links: [text](url)
+	text = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2">\1</a>', text)
 	# Code
 	text = re.sub(r'`(.+?)`', r'<code>\1</code>', text)
 	# Bold
@@ -219,10 +223,14 @@ def main():
 
 	body_html = md_to_html(md_text)
 
+	from pathlib import Path
+	base_uri = Path(INPUT).resolve().parent.as_uri() + "/"
+
 	full_html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<base href="{base_uri}">
 <title>{TITLE}</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
@@ -315,6 +323,23 @@ def main():
     padding: 1px 5px;
     border-radius: 3px;
     border: 1px solid #e1e4e8;
+  }}
+
+  a {{
+    color: var(--accent);
+    text-decoration: none;
+  }}
+
+  a:hover {{
+    text-decoration: underline;
+  }}
+
+  img {{
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 24px auto;
+    border-radius: 4px;
   }}
 
   .math-display {{
