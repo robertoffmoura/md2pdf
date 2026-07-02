@@ -179,7 +179,20 @@ def md_to_html(md):
 
 def process_inline(text):
 	"""Process inline markdown: bold, italic, code, links, images, inline math."""
-	# Protect inline math first — replace with placeholders
+	# Protect escaped characters first (so they are not parsed as markdown syntax)
+	escaped_chars = [
+		(r'\\\\', '%%ESC_BS%%', '\\'),
+		(r'\\\*', '%%ESC_AST%%', '*'),
+		(r'\\\_', '%%ESC_UND%%', '_'),
+		(r'\\`', '%%ESC_GRA%%', '`'),
+		(r'\\\[', '%%ESC_LBR%%', '['),
+		(r'\\\]', '%%ESC_RBR%%', ']'),
+		(r'\\\$', '%%ESC_DOL%%', '$'),
+	]
+	for pattern, placeholder, _ in escaped_chars:
+		text = re.sub(pattern, placeholder, text)
+
+	# Protect inline math next — replace with placeholders
 	math_parts = []
 	def save_math(m):
 		math_parts.append(m.group(0))
@@ -201,6 +214,10 @@ def process_inline(text):
 	# Restore math
 	for i, m in enumerate(math_parts):
 		text = text.replace(f'%%MATH{i}%%', f'<span class="math-inline">{m}</span>')
+
+	# Restore escaped characters to their literal symbols
+	for _, placeholder, literal in escaped_chars:
+		text = text.replace(placeholder, literal)
 
 	return text
 
