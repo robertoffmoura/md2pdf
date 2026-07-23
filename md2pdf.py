@@ -53,12 +53,20 @@ def parse_alignments(delimiter_row):
 	return alignments
 
 
+def close_list_tags(html_lines, list_stack):
+	while list_stack:
+		tag = list_stack.pop()
+		if list_stack:
+			html_lines.append(f'</{tag}></li>')
+		else:
+			html_lines.append(f'</{tag}>')
+
+
 def md_to_html(md):
 	"""Simple markdown to HTML converter that preserves LaTeX math."""
 	lines = md.split('\n')
 	html_lines = []
-	in_list = False
-	in_sublist = False
+	list_stack = []
 	i = 0
 
 	while i < len(lines):
@@ -66,12 +74,7 @@ def md_to_html(md):
 
 		# Code block
 		if line.strip().startswith('```'):
-			if in_list:
-				if in_sublist:
-					html_lines.append('</ul></li>')
-					in_sublist = False
-				html_lines.append('</ul>')
-				in_list = False
+			close_list_tags(html_lines, list_stack)
 			lang = line.strip()[3:].strip()
 			code_content = []
 			i += 1
@@ -93,12 +96,7 @@ def md_to_html(md):
 		if line.strip().startswith('|') and i + 1 < len(lines):
 			next_line = lines[i+1]
 			if re.match(r'^\|(?:\s*:?-+:?\s*\|)+$', next_line.strip()):
-				if in_list:
-					if in_sublist:
-						html_lines.append('</ul></li>')
-						in_sublist = False
-					html_lines.append('</ul>')
-					in_list = False
+				close_list_tags(html_lines, list_stack)
 
 				table_lines = []
 				while i < len(lines) and lines[i].strip().startswith('|'):
@@ -134,12 +132,7 @@ def md_to_html(md):
 
 		# Display math block
 		if line.strip().startswith('$$'):
-			if in_list:
-				if in_sublist:
-					html_lines.append('</ul></li>')
-					in_sublist = False
-				html_lines.append('</ul>')
-				in_list = False
+			close_list_tags(html_lines, list_stack)
 			# Collect all lines until closing $$
 			math_content = []
 			if line.strip() == '$$':
@@ -174,82 +167,74 @@ def md_to_html(md):
 
 		# Horizontal Rule
 		if line.strip() == '---':
-			if in_list:
-				if in_sublist:
-					html_lines.append('</ul></li>')
-					in_sublist = False
-				html_lines.append('</ul>')
-				in_list = False
+			close_list_tags(html_lines, list_stack)
 			html_lines.append('<hr>')
 			i += 1
 			continue
 
 		# Headers
 		if line.startswith('###'):
-			if in_list:
-				if in_sublist:
-					html_lines.append('</ul></li>')
-					in_sublist = False
-				html_lines.append('</ul>')
-				in_list = False
+			close_list_tags(html_lines, list_stack)
 			html_lines.append(f'<h3>{process_inline(line.lstrip("#").strip())}</h3>')
 			i += 1
 			continue
 		if line.startswith('##'):
-			if in_list:
-				if in_sublist:
-					html_lines.append('</ul></li>')
-					in_sublist = False
-				html_lines.append('</ul>')
-				in_list = False
+			close_list_tags(html_lines, list_stack)
 			html_lines.append(f'<h2>{process_inline(line.lstrip("#").strip())}</h2>')
 			i += 1
 			continue
 		if line.startswith('#'):
-			if in_list:
-				if in_sublist:
-					html_lines.append('</ul></li>')
-					in_sublist = False
-				html_lines.append('</ul>')
-				in_list = False
+			close_list_tags(html_lines, list_stack)
 			html_lines.append(f'<h1>{process_inline(line.lstrip("#").strip())}</h1>')
 			i += 1
 			continue
 
-		# List items (detect indent level)
-		if line.strip().startswith('- '):
-			# Determine indent level
-			stripped = line.rstrip()
-			leading_ws = len(stripped) - len(stripped.lstrip())
-			is_sub = leading_ws >= 2 or stripped.startswith('\t-') or stripped.startswith('\t\t-')
-			text = line.strip().lstrip('- ').strip()
+		# List items (detect indent level and tag type)
+		ul_match = re.match(r'^(\s*)-\s+(.*)$', line)
+		ol_match = re.match(r'^(\s*)\d+\.\s+(.*)$', line)
 
-			if is_sub:
-				if not in_list:
+		if ul_match or ol_match:
+			match = ul_match if ul_match else ol_match
+			leading_spaces = match.group(1)
+			text = match.group(2).strip()
+			list_tag = 'ul' if ul_match else 'ol'
+			is_sub = len(leading_spaces) >= 2 or '\t' in leading_spaces
+			target_depth = 2 if is_sub else 1
+
+			if target_depth == 1:
+				if len(list_stack) == 2:
+					sub_tag = list_stack.pop()
+					html_lines.append(f'</{sub_tag}></li>')
+				if len(list_stack) == 1:
+					if list_stack[0] != list_tag:
+						old_tag = list_stack.pop()
+						html_lines.append(f'</{old_tag}>')
+						list_stack.append(list_tag)
+						html_lines.append(f'<{list_tag}>')
+				else:
+					list_stack.append(list_tag)
+					html_lines.append(f'<{list_tag}>')
+			elif target_depth == 2:
+				if len(list_stack) == 0:
+					list_stack.append('ul')
 					html_lines.append('<ul>')
-					in_list = True
-				if not in_sublist:
-					html_lines.append('<li><ul>')
-					in_sublist = True
-				html_lines.append(f'<li>{process_inline(text)}</li>')
-			else:
-				if in_sublist:
-					html_lines.append('</ul></li>')
-					in_sublist = False
-				if not in_list:
-					html_lines.append('<ul>')
-					in_list = True
-				html_lines.append(f'<li>{process_inline(text)}</li>')
+				if len(list_stack) == 1:
+					list_stack.append(list_tag)
+					html_lines.append(f'<li><{list_tag}>')
+				elif len(list_stack) == 2:
+					if list_stack[1] != list_tag:
+						old_sub = list_stack.pop()
+						html_lines.append(f'</{old_sub}>')
+						list_stack.append(list_tag)
+						html_lines.append(f'<{list_tag}>')
+
+			html_lines.append(f'<li>{process_inline(text)}</li>')
 			i += 1
 			continue
 
-		# Close any open list
-		if in_list and line.strip() == '':
-			if in_sublist:
-				html_lines.append('</ul></li>')
-				in_sublist = False
-			html_lines.append('</ul>')
-			in_list = False
+		# Close any open list on empty line
+		if list_stack and line.strip() == '':
+			close_list_tags(html_lines, list_stack)
 			i += 1
 			continue
 
@@ -266,6 +251,7 @@ def md_to_html(md):
 			if (next_line.strip() == '' or
 				next_line.startswith('#') or
 				next_line.strip().startswith('- ') or
+				re.match(r'^\d+\.\s+', next_line.strip()) or
 				next_line.strip().startswith('$$') or
 				next_line.strip().startswith('```') or
 				next_line.strip().startswith('|')):
@@ -273,22 +259,12 @@ def md_to_html(md):
 			para_lines.append(next_line)
 			i += 1
 
-		if in_list:
-			if in_sublist:
-				html_lines.append('</ul></li>')
-				in_sublist = False
-			html_lines.append('</ul>')
-			in_list = False
+		close_list_tags(html_lines, list_stack)
 
 		paragraph = ' '.join(l.strip() for l in para_lines)
 		html_lines.append(f'<p>{process_inline(paragraph)}</p>')
 
-	# Close any remaining open list
-	if in_sublist:
-		html_lines.append('</ul></li>')
-	if in_list:
-		html_lines.append('</ul>')
-
+	close_list_tags(html_lines, list_stack)
 	return '\n'.join(html_lines)
 
 
@@ -442,7 +418,7 @@ def main():
     margin: 12px 0 20px 0;
   }}
 
-  ul {{
+  ul, ol {{
     margin: 4px 0;
     margin-left: 16px;
     padding-left: 24px;
@@ -452,11 +428,11 @@ def main():
     margin-bottom: 5px;
   }}
 
-  li:has(> ul) {{
+  li:has(> ul), li:has(> ol) {{
     list-style-type: none;
   }}
 
-  li > ul {{
+  li > ul, li > ol {{
     margin-top: 4px;
     margin-left: 16px;
     padding-left: 24px;

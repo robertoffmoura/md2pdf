@@ -66,3 +66,14 @@ Here is a sample table:
 | Pi | $\pi$ | 3.14159 |
 | Euler's Number | $e$ | 2.71828 |
 | Golden Ratio | $\phi$ | 1.61803 |
+
+---
+
+## Ordered Lists
+
+You can create ordered lists and nested items:
+1. First step in the process
+   1. Sub-step A
+   2. Sub-step B
+2. Second step in the process
+3. Third step in the process
