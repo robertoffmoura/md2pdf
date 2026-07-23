@@ -42,3 +42,15 @@ You can create lists and sub-lists to organize information:
   - Second nested bullet point
 - Another main bullet point
 
+---
+
+## Code Blocks
+
+You can write multiline code blocks using triple backticks:
+
+```python
+def greet(name):
+    print(f"Hello, {name}!")
+
+greet("World")
+```

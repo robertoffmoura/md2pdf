@@ -9,6 +9,7 @@ import sys
 import os
 import tempfile
 import base64
+import html
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -30,6 +31,31 @@ def md_to_html(md):
 
 	while i < len(lines):
 		line = lines[i]
+
+		# Code block
+		if line.strip().startswith('```'):
+			if in_list:
+				if in_sublist:
+					html_lines.append('</ul></li>')
+					in_sublist = False
+				html_lines.append('</ul>')
+				in_list = False
+			lang = line.strip()[3:].strip()
+			code_content = []
+			i += 1
+			while i < len(lines) and not lines[i].strip().startswith('```'):
+				code_content.append(lines[i])
+				i += 1
+			if i < len(lines):
+				i += 1  # skip closing ```
+
+			code_text = '\n'.join(code_content)
+			escaped_code = html.escape(code_text)
+			if lang:
+				html_lines.append(f'<pre><code class="language-{lang}">{escaped_code}</code></pre>')
+			else:
+				html_lines.append(f'<pre><code>{escaped_code}</code></pre>')
+			continue
 
 		# Display math block
 		if line.strip().startswith('$$'):
@@ -165,7 +191,8 @@ def md_to_html(md):
 			if (next_line.strip() == '' or
 				next_line.startswith('#') or
 				next_line.strip().startswith('- ') or
-				next_line.strip().startswith('$$')):
+				next_line.strip().startswith('$$') or
+				next_line.strip().startswith('```')):
 				break
 			para_lines.append(next_line)
 			i += 1
@@ -372,6 +399,26 @@ def main():
     border: 1px solid #e1e4e8;
   }}
 
+  pre {{
+    font-family: 'Source Code Pro', 'Menlo', 'Consolas', monospace;
+    font-size: 0.9em;
+    background: var(--bg-code);
+    padding: 12px 16px;
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
+    overflow-x: auto;
+    margin: 16px 0;
+    line-height: 1.5;
+  }}
+
+  pre code {{
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    font-size: inherit;
+  }}
+
   a {{
     color: var(--accent);
     text-decoration: none;
@@ -413,6 +460,9 @@ def main():
       page-break-after: avoid;
     }}
     .math-display {{
+      page-break-inside: avoid;
+    }}
+    pre {{
       page-break-inside: avoid;
     }}
   }}
