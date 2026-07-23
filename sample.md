@@ -54,3 +54,15 @@ def greet(name):
 
 greet("World")
 ```
+
+---
+
+## Tables
+
+Here is a sample table:
+
+| Constant | Symbol | Approximate Value |
+| :--- | :---: | ---: |
+| Pi | $\pi$ | 3.14159 |
+| Euler's Number | $e$ | 2.71828 |
+| Golden Ratio | $\phi$ | 1.61803 |

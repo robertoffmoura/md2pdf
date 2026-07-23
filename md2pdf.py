@@ -21,6 +21,38 @@ from selenium.webdriver.support.ui import WebDriverWait
 # Extract display math $$ ... $$ and inline math $ ... $
 # We'll convert markdown manually since we need fine control.
 
+def parse_table_row(row_text):
+	# Strip leading/trailing whitespace
+	text = row_text.strip()
+	# Remove leading pipe if present
+	if text.startswith('|'):
+		text = text[1:]
+	# Remove trailing pipe if present
+	if text.endswith('|'):
+		text = text[:-1]
+	# Split by |
+	cells = [cell.strip() for cell in text.split('|')]
+	return cells
+
+
+def parse_alignments(delimiter_row):
+	cells = parse_table_row(delimiter_row)
+	alignments = []
+	for cell in cells:
+		cell = cell.strip()
+		left = cell.startswith(':')
+		right = cell.endswith(':')
+		if left and right:
+			alignments.append('center')
+		elif right:
+			alignments.append('right')
+		elif left:
+			alignments.append('left')
+		else:
+			alignments.append('')
+	return alignments
+
+
 def md_to_html(md):
 	"""Simple markdown to HTML converter that preserves LaTeX math."""
 	lines = md.split('\n')
@@ -56,6 +88,49 @@ def md_to_html(md):
 			else:
 				html_lines.append(f'<pre><code>{escaped_code}</code></pre>')
 			continue
+
+		# Table
+		if line.strip().startswith('|') and i + 1 < len(lines):
+			next_line = lines[i+1]
+			if re.match(r'^\|(?:\s*:?-+:?\s*\|)+$', next_line.strip()):
+				if in_list:
+					if in_sublist:
+						html_lines.append('</ul></li>')
+						in_sublist = False
+					html_lines.append('</ul>')
+					in_list = False
+
+				table_lines = []
+				while i < len(lines) and lines[i].strip().startswith('|'):
+					table_lines.append(lines[i])
+					i += 1
+
+				headers = parse_table_row(table_lines[0])
+				alignments = parse_alignments(table_lines[1])
+				while len(alignments) < len(headers):
+					alignments.append('')
+
+				thead_html = '<thead>\n<tr>\n'
+				for idx, header in enumerate(headers):
+					align = alignments[idx]
+					align_attr = f' align="{align}"' if align else ''
+					thead_html += f'<th{align_attr}>{process_inline(header)}</th>\n'
+				thead_html += '</tr>\n</thead>'
+
+				tbody_html = '<tbody>\n'
+				for r in table_lines[2:]:
+					cells = parse_table_row(r)
+					tbody_html += '<tr>\n'
+					for idx in range(len(headers)):
+						align = alignments[idx]
+						align_attr = f' align="{align}"' if align else ''
+						val = cells[idx] if idx < len(cells) else ''
+						tbody_html += f'<td{align_attr}>{process_inline(val)}</td>\n'
+					tbody_html += '</tr>\n'
+				tbody_html += '</tbody>'
+
+				html_lines.append(f'<table>\n{thead_html}\n{tbody_html}\n</table>')
+				continue
 
 		# Display math block
 		if line.strip().startswith('$$'):
@@ -192,7 +267,8 @@ def md_to_html(md):
 				next_line.startswith('#') or
 				next_line.strip().startswith('- ') or
 				next_line.strip().startswith('$$') or
-				next_line.strip().startswith('```')):
+				next_line.strip().startswith('```') or
+				next_line.strip().startswith('|')):
 				break
 			para_lines.append(next_line)
 			i += 1
@@ -419,6 +495,44 @@ def main():
     font-size: inherit;
   }}
 
+  table {{
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 0.95em;
+  }}
+
+  th, td {{
+    padding: 8px 12px;
+    line-height: 1.5;
+    text-align: left;
+  }}
+
+  th {{
+    font-weight: 600;
+    border-bottom: 2px solid var(--border);
+  }}
+
+  td {{
+    border-bottom: 1px solid var(--border);
+  }}
+
+  tr:last-child td {{
+    border-bottom: none;
+  }}
+
+  th[align="center"], td[align="center"] {{
+    text-align: center;
+  }}
+
+  th[align="right"], td[align="right"] {{
+    text-align: right;
+  }}
+
+  th[align="left"], td[align="left"] {{
+    text-align: left;
+  }}
+
   a {{
     color: var(--accent);
     text-decoration: none;
@@ -463,6 +577,9 @@ def main():
       page-break-inside: avoid;
     }}
     pre {{
+      page-break-inside: avoid;
+    }}
+    tr {{
       page-break-inside: avoid;
     }}
   }}
